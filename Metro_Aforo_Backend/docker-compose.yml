@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aqp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: aqp_aforo
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - aqp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aqp-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: aqp_aforo
+      DB_USER: postgres
+      DB_PASSWORD: 123
+      JWT_SECRET: aqp_aforos_secret_key_2024
+      JWT_EXPIRES_IN: 8h
+      CORS_ORIGIN: "*"
+    ports:
+      - "3001:3000"
+    volumes:
+      - uploads_data:/app/uploads
+    networks:
+      - aqp-network
+
+  frontend:
+    build:
+      context: ../Metro_Aforo_Frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+    container_name: aqp-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - aqp-network
+
+volumes:
+  postgres_data:
+  uploads_data:
+
+networks:
+  aqp-network:
+    driver: bridge
