@@ -1,6 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '../components/shared/ProtectedRoute';
+import { PortadaPage } from '../pages/auth/PortadaPage';
 import { LoginPage } from '../pages/auth/LoginPage';
+import { CambiarPasswordPage } from '../pages/auth/CambiarPasswordPage';
+import { RecuperarPasswordPage } from '../pages/auth/RecuperarPasswordPage';
+import { RestablecerPasswordPage } from '../pages/auth/RestablecerPasswordPage';
 import { IniciarTurnoPage } from '../pages/aforador/IniciarTurnoPage';
 import { MenuPrincipalPage } from '../pages/aforador/MenuPrincipalPage';
 import { FranjasPage } from '../pages/aforador/FranjasPage';
@@ -16,21 +20,27 @@ import { PuntosAforoPage } from '../pages/admin/PuntosAforoPage';
 import { BuscarPage } from '../pages/admin/BuscarPage';
 import { ReportesPage } from '../pages/admin/ReportesPage';
 import { AuditoriaPage } from '../pages/admin/AuditoriaPage';
+import { FranjasAdminPage } from '../pages/admin/FranjasAdminPage';
+import { TurnosPage } from '../pages/admin/TurnosPage';
 import { useAuth } from '../../application/hooks/useAuth';
 
-function HomeRedirect() {
+function LoginGuard() {
   const { usuario, loading } = useAuth();
   if (loading) return null;
-  if (!usuario) return <Navigate to="/login" replace />;
-  if (usuario.rol === 'administrador') return <Navigate to="/admin/dashboard" replace />;
-  return <Navigate to="/aforador/iniciar-turno" replace />;
+  if (usuario) {
+    return <Navigate to={usuario.rol === 'administrador' ? '/admin/dashboard' : '/aforador/iniciar-turno'} replace />;
+  }
+  return <LoginPage />;
 }
 
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<HomeRedirect />} />
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<PortadaPage />} />
+      <Route path="/login" element={<LoginGuard />} />
+      <Route path="/cambiar-password" element={<CambiarPasswordPage />} />
+      <Route path="/recuperar-password" element={<RecuperarPasswordPage />} />
+      <Route path="/restablecer-password/:token" element={<RestablecerPasswordPage />} />
 
       {/* Aforador routes */}
       <Route path="/aforador/iniciar-turno" element={
@@ -79,6 +89,12 @@ export function AppRoutes() {
       } />
       <Route path="/admin/auditoria" element={
         <ProtectedRoute roles={['administrador']}><AuditoriaPage /></ProtectedRoute>
+      } />
+      <Route path="/admin/franjas" element={
+        <ProtectedRoute roles={['administrador']}><FranjasAdminPage /></ProtectedRoute>
+      } />
+      <Route path="/admin/turnos" element={
+        <ProtectedRoute roles={['administrador']}><TurnosPage /></ProtectedRoute>
       } />
 
       <Route path="*" element={<Navigate to="/" replace />} />

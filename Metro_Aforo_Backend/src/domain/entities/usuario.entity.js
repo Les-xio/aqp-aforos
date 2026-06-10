@@ -25,7 +25,7 @@ module.exports = function buildUsuario(data) {
     .toLowerCase();
 
   // Limpia username
-  const userName = String(data.user || "")
+  const userName = String(data.username || data.user || "")
     .trim()
     .toLowerCase();
 

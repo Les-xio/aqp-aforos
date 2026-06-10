@@ -67,6 +67,15 @@ const includeBase = () => [
   { model: Vehiculo, as: 'vehiculo' }
 ];
 
+function calcularTotales(data, tipoColumna = 'cantidad') {
+  const map = {};
+  data.forEach((item) => {
+    const vehiculo = item.vehiculo?.tipo || 'Sin tipo';
+    map[vehiculo] = (map[vehiculo] || 0) + Number(item[tipoColumna] || 0);
+  });
+  return Object.entries(map).map(([vehiculo, total]) => ({ vehiculo, total }));
+}
+
 class ReporteController {
   async exportarConteos(req, res, next) {
     try {
@@ -76,7 +85,8 @@ class ReporteController {
         include: includeBase(),
         order: [['fecha_hora', 'ASC']]
       });
-      return sendExport(res, data, columnasConteos, 'reporte_conteos_vehiculares', formato);
+      const totals = calcularTotales(data);
+      return sendExport(res, data, columnasConteos, 'reporte_conteos_vehiculares', formato, totals);
     } catch (err) { next(err); }
   }
 
@@ -88,7 +98,8 @@ class ReporteController {
         include: includeBase(),
         order: [['fecha_hora', 'ASC']]
       });
-      return sendExport(res, data, columnasOcupacion, 'reporte_ocupacion', formato);
+      const totals = calcularTotales(data);
+      return sendExport(res, data, columnasOcupacion, 'reporte_ocupacion', formato, totals);
     } catch (err) { next(err); }
   }
 

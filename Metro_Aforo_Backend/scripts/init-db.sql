@@ -1,5 +1,5 @@
 -- ============================================
--- SCRIPT DE INICIALIZACIÓN: AQP AFOROS
+-- SCRIPT DE INICIALIZACIÓN: METRO AQP AFOROS
 -- Conforme al Diagrama Entidad-Relación
 -- ============================================
 
@@ -157,6 +157,11 @@ CREATE TABLE IF NOT EXISTS conteos_ocupacion (
 );
 
 -- ============================================
+-- EXTENSIÓN POSTGIS (datos geoespaciales)
+-- ============================================
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+-- ============================================
 -- TABLA: evidencias_foto
 -- ============================================
 CREATE TABLE IF NOT EXISTS evidencias_foto (
@@ -168,6 +173,7 @@ CREATE TABLE IF NOT EXISTS evidencias_foto (
     foto_url     VARCHAR(500) NOT NULL,
     latitud      DECIMAL(10,7) NOT NULL,
     longitud     DECIMAL(10,7) NOT NULL,
+    ubicacion    GEOGRAPHY(Point, 4326),
     fecha_hora   TIMESTAMP NOT NULL,
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -248,6 +254,26 @@ CREATE INDEX IF NOT EXISTS idx_franjas_estado ON franjas_horarias(estado);
 CREATE INDEX IF NOT EXISTS idx_conteos_franja ON conteos_vehiculares(franja_id);
 CREATE INDEX IF NOT EXISTS idx_conteos_ocupacion_franja ON conteos_ocupacion(franja_id);
 CREATE INDEX IF NOT EXISTS idx_evidencias_franja ON evidencias_foto(franja_id);
+CREATE INDEX IF NOT EXISTS idx_evidencias_ubicacion ON evidencias_foto USING GIST (ubicacion);
 CREATE INDEX IF NOT EXISTS idx_subidas_franja ON paradas_subidas_bajadas(franja_id);
 CREATE INDEX IF NOT EXISTS idx_colas_franja ON colas_vehiculares(franja_id);
 CREATE INDEX IF NOT EXISTS idx_auditoria_fecha ON auditoria(created_at DESC);
+
+-- ============================================
+-- TRIGGER: sincronizar ubicacion con latitud/longitud
+-- ============================================
+CREATE OR REPLACE FUNCTION sync_evidencia_ubicacion()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.latitud IS NOT NULL AND NEW.longitud IS NOT NULL THEN
+    NEW.ubicacion = ST_SetSRID(ST_MakePoint(NEW.longitud, NEW.latitud), 4326)::GEOGRAPHY;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_sync_evidencia_ubicacion ON evidencias_foto;
+CREATE TRIGGER trg_sync_evidencia_ubicacion
+  BEFORE INSERT OR UPDATE OF latitud, longitud ON evidencias_foto
+  FOR EACH ROW
+  EXECUTE FUNCTION sync_evidencia_ubicacion();

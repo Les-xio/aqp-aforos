@@ -3,8 +3,8 @@ class ObtenerUsuariosUseCase {
     this.usuarioRepository = usuarioRepository;
   }
 
-  async execute({ page, limit, activo } = {}) {
-    const { data, total } = await this.usuarioRepository.findAll({ page, limit, activo });
+  async execute({ page, limit, activo, rol } = {}) {
+    const { data, total } = await this.usuarioRepository.findAll({ page, limit, activo, rol });
     const usuarios = data.map(u => {
       const { password, ...usuario } = u.toJSON();
       return usuario;

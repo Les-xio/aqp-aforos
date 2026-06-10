@@ -31,6 +31,16 @@ class TurnoRepository {
     });
   }
 
+  async findPendienteByUsuario(usuarioId) {
+    return Turno.findOne({
+      where: { usuario_id: usuarioId, activo: false, fecha_fin: null },
+      include: [
+        { model: FranjaHoraria, as: 'franjas' },
+        { model: Usuario, as: 'usuario', attributes: { exclude: ['password'] } }
+      ]
+    });
+  }
+
   async create(data) {
     return Turno.create(data);
   }

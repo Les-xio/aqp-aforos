@@ -1,9 +1,10 @@
 const { Usuario } = require('../database/models');
 
 class UsuarioRepository {
-  async findAll({ page = 1, limit = 10, activo } = {}) {
+  async findAll({ page = 1, limit = 10, activo, rol } = {}) {
     const where = {};
     if (activo !== undefined) where.activo = activo;
+    if (rol !== undefined) where.rol = rol;
     const offset = (page - 1) * limit;
     const { rows, count } = await Usuario.findAndCountAll({
       where,

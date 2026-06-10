@@ -19,7 +19,9 @@ axiosClient.interceptors.request.use((config) => {
 axiosClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (error.response?.status === 401) {
+    const isAuthRequest = error.config?.url?.includes('/auth/');
+    const isOnLogin = window.location.pathname === '/login' || window.location.pathname === '/';
+    if (error.response?.status === 401 && !isAuthRequest && !isOnLogin) {
       localStorage.removeItem('token');
       localStorage.removeItem('usuario');
       window.location.href = '/login';

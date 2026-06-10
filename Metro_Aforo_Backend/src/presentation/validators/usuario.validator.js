@@ -7,7 +7,7 @@ const registrarRules = [
   body('celular').matches(/^\d{9}$/).withMessage('Celular debe tener 9 dígitos'),
   body('correo').isEmail().withMessage('Correo inválido').normalizeEmail(),
   body('rol').isIn(['administrador', 'aforador']).withMessage('Rol inválido'),
-  body('user').notEmpty().withMessage('Nombre de usuario requerido').trim()
+  body('username').notEmpty().withMessage('Nombre de usuario requerido').trim()
 ];
 
 const actualizarRules = [

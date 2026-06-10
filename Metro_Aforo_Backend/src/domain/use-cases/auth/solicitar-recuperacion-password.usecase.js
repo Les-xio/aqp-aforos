@@ -23,7 +23,7 @@ class SolicitarRecuperacionPasswordUseCase {
             id_usuario: usuario.id_usuario, token, expires_at: expiresAt
         });
 
-        const recoveryLink = `https://tuapp.com/reset-password?token=${token}`;
+        const recoveryLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/restablecer-password/${token}`;
 
         if (this.emailService) {
             await this.emailService.sendRecoveryEmail({

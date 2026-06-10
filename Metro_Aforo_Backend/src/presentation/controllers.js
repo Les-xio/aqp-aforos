@@ -10,11 +10,13 @@ const EvidenciaFotoController = require('./controllers/evidencia-foto.controller
 const SubidasBajadasController = require('./controllers/subidas-bajadas.controller');
 const ColaVehicularController = require('./controllers/cola-vehicular.controller');
 const ReporteController = require('./controllers/reporte.controller');
+const ReniecController = require('./controllers/reniec.controller');
+const ReniecService = require('../domain/services/ReniecService');
 
 function buildControllers(useCases, repositories) {
   return {
     authController: new AuthController(useCases.auth),
-    usuarioController: new UsuarioController(useCases.usuario),
+    usuarioController: new UsuarioController({ ...useCases.usuario, auditoriaRepository: repositories.auditoriaRepository }),
     turnoController: new TurnoController({
       ...useCases.turno,
       turnoRepository: repositories.turnoRepository,
@@ -41,7 +43,10 @@ function buildControllers(useCases, repositories) {
       categoriaRepository: repositories.categoriaRepository,
       subcategoriaRepository: repositories.subcategoriaRepository
     }),
-    evidenciaFotoController: new EvidenciaFotoController(useCases.evidenciaFoto),
+    evidenciaFotoController: new EvidenciaFotoController({
+      ...useCases.evidenciaFoto,
+      evidenciaFotoRepository: repositories.evidenciaFotoRepository
+    }),
     subidasBajadasController: new SubidasBajadasController({
       ...useCases.subidasBajadas,
       subidasBajadasRepository: repositories.subidasBajadasRepository
@@ -50,7 +55,8 @@ function buildControllers(useCases, repositories) {
       ...useCases.colaVehicular,
       colaVehicularRepository: repositories.colaVehicularRepository
     }),
-    reporteController: new ReporteController()
+    reporteController: new ReporteController(),
+    reniecController: new ReniecController({ reniecService: new ReniecService() })
   };
 }
 

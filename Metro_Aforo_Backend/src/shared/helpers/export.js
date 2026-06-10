@@ -25,9 +25,14 @@ function getNestedValue(obj, path) {
   }, obj);
 }
 
-async function sendExport(res, data, columns, filename, format) {
+async function sendExport(res, data, columns, filename, format, totals) {
   if (format === 'csv') {
-    const csv = jsonToCsv(data, columns);
+    let csv = jsonToCsv(data, columns);
+    if (totals && totals.length > 0) {
+      csv += '\n\nTotales por tipo de vehículo\n';
+      csv += 'Vehículo,Cantidad\n';
+      totals.forEach(t => { csv += `${t.vehiculo},${t.total}\n`; });
+    }
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
     return res.send('\uFEFF' + csv);
@@ -42,13 +47,30 @@ async function sendExport(res, data, columns, filename, format) {
       columns.reduce((acc, c) => { acc[c.key] = getNestedValue(item, c.key) ?? ''; return acc; }, {})
     ));
     sheet.getRow(1).font = { bold: true };
+
+    if (totals && totals.length > 0) {
+      const totalRow = sheet.rowCount + 2;
+      sheet.getCell(`A${totalRow}`).value = 'Totales por tipo de vehículo';
+      sheet.getCell(`A${totalRow}`).font = { bold: true, size: 12 };
+      const headerRow = totalRow + 1;
+      sheet.getCell(`A${headerRow}`).value = 'Vehículo';
+      sheet.getCell(`B${headerRow}`).value = 'Cantidad';
+      sheet.getCell(`A${headerRow}`).font = { bold: true };
+      sheet.getCell(`B${headerRow}`).font = { bold: true };
+      totals.forEach((t, i) => {
+        const r = headerRow + 1 + i;
+        sheet.getCell(`A${r}`).value = t.vehiculo;
+        sheet.getCell(`B${r}`).value = t.total;
+      });
+    }
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}.xlsx"`);
     await workbook.xlsx.write(res);
     return res.end();
   }
 
-  return res.json({ ok: true, message: 'Datos exportados', data });
+  return res.json({ ok: true, message: 'Datos exportados', data, totals });
 }
 
 function parseFormato(req) {

@@ -11,7 +11,7 @@ class IniciarSesionUseCase {
 
     sanitizeUser(usuario) {
         if (!usuario) return null;
-        const safeUser = { ...usuario };
+        const safeUser = usuario.toJSON ? usuario.toJSON() : { ...usuario };
         delete safeUser.password;
         return safeUser;
     }

@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(uploadsDir));
 
 app.get('/health', (_req, res) => {
-  res.json({ ok: true, message: 'API AQP Aforos funcionando', timestamp: new Date().toISOString() });
+  res.json({ ok: true, message: 'API Metro AQP Aforos funcionando', timestamp: new Date().toISOString() });
 });
 
 const controllers = buildControllers(useCases, repositories);
@@ -41,6 +41,7 @@ app.use('/api/evidencias-foto', routers.evidenciaFotoRouter);
 app.use('/api/subidas-bajadas', routers.subidasBajadasRouter);
 app.use('/api/colas-vehiculares', routers.colaVehicularRouter);
 app.use('/api/reportes', routers.reporteRouter);
+app.use('/api/reniec', routers.reniecRouter);
 
 app.use(errorHandler);
 

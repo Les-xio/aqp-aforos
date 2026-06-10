@@ -26,6 +26,7 @@ const EliminarUsuarioUseCase = require('../domain/use-cases/usuario/eliminar-usu
 const ObtenerUsuariosUseCase = require('../domain/use-cases/usuario/obtener-usuarios.usecase');
 const IniciarTurnoUseCase = require('../domain/use-cases/turno/iniciar-turno.usecase');
 const CerrarTurnoUseCase = require('../domain/use-cases/turno/cerrar-turno.usecase');
+const GenerarTurnoAdminUseCase = require('../domain/use-cases/turno/generar-turno-admin.usecase');
 const IniciarFranjaUseCase = require('../domain/use-cases/franja/iniciar-franja.usecase');
 const CerrarFranjaUseCase = require('../domain/use-cases/franja/cerrar-franja.usecase');
 const RegistrarConteoVehicularUseCase = require('../domain/use-cases/conteo/registrar-conteo-vehicular.usecase');
@@ -96,7 +97,12 @@ const useCases = {
       turnoPuntoRepository: repositories.turnoPuntoRepository,
       franjaHorariaRepository: repositories.franjaHorariaRepository
     }),
-    cerrarTurnoUseCase: new CerrarTurnoUseCase({ turnoRepository: repositories.turnoRepository })
+    cerrarTurnoUseCase: new CerrarTurnoUseCase({ turnoRepository: repositories.turnoRepository }),
+    generarTurnoAdminUseCase: new GenerarTurnoAdminUseCase({
+      turnoRepository: repositories.turnoRepository,
+      franjaHorariaRepository: repositories.franjaHorariaRepository,
+      usuarioRepository: repositories.usuarioRepository
+    })
   },
   franja: {
     iniciarFranjaUseCase: new IniciarFranjaUseCase({ franjaHorariaRepository: repositories.franjaHorariaRepository }),

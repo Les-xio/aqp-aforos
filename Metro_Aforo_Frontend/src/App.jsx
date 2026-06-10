@@ -4,6 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { appTheme } from './theme';
 import { AuthProvider } from './application/context/AuthContext';
 import { TurnoProvider } from './application/context/TurnoContext';
+import { SyncProvider } from './infrastructure/storage/SyncContext';
+import { SwUpdateBanner } from './presentation/components/SwUpdateBanner';
+import { InstallPrompt } from './presentation/components/InstallPrompt';
 import { AppRoutes } from './presentation/routes/AppRoutes';
 
 const queryClient = new QueryClient({
@@ -20,7 +23,11 @@ function App() {
         <BrowserRouter>
           <AuthProvider>
             <TurnoProvider>
-              <AppRoutes />
+              <SyncProvider>
+                <SwUpdateBanner />
+                <InstallPrompt />
+                <AppRoutes />
+              </SyncProvider>
             </TurnoProvider>
           </AuthProvider>
         </BrowserRouter>

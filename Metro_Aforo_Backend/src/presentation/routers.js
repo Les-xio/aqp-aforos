@@ -10,6 +10,7 @@ const evidenciaFotoRoutes = require('./routes/evidencia-foto.routes');
 const subidasBajadasRoutes = require('./routes/subidas-bajadas.routes');
 const colaVehicularRoutes = require('./routes/cola-vehicular.routes');
 const reporteRoutes = require('./routes/reporte.routes');
+const reniecRoutes = require('./routes/reniec.routes');
 
 function buildRouters(controllers) {
   return {
@@ -24,7 +25,8 @@ function buildRouters(controllers) {
     evidenciaFotoRouter: evidenciaFotoRoutes(controllers.evidenciaFotoController),
     subidasBajadasRouter: subidasBajadasRoutes(controllers.subidasBajadasController),
     colaVehicularRouter: colaVehicularRoutes(controllers.colaVehicularController),
-    reporteRouter: reporteRoutes(controllers.reporteController)
+    reporteRouter: reporteRoutes(controllers.reporteController),
+    reniecRouter: reniecRoutes(controllers.reniecController)
   };
 }
 

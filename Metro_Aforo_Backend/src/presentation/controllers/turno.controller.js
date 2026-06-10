@@ -1,9 +1,10 @@
 const { success } = require('../../shared/helpers/response');
 
 class TurnoController {
-  constructor({ iniciarTurnoUseCase, cerrarTurnoUseCase, turnoRepository, franjaHorariaRepository, turnoPuntoRepository }) {
+  constructor({ iniciarTurnoUseCase, cerrarTurnoUseCase, generarTurnoAdminUseCase, turnoRepository, franjaHorariaRepository, turnoPuntoRepository }) {
     this.iniciarTurnoUseCase = iniciarTurnoUseCase;
     this.cerrarTurnoUseCase = cerrarTurnoUseCase;
+    this.generarTurnoAdminUseCase = generarTurnoAdminUseCase;
     this.turnoRepository = turnoRepository;
     this.franjaHorariaRepository = franjaHorariaRepository;
     this.turnoPuntoRepository = turnoPuntoRepository;
@@ -63,6 +64,39 @@ class TurnoController {
     try {
       const puntos = await this.turnoPuntoRepository.findByTurno(Number(req.params.id));
       return success(res, puntos, 'Puntos de aforo del turno');
+    } catch (err) { next(err); }
+  };
+
+  generarAdmin = async (req, res, next) => {
+    try {
+      const { usuarioId, horas, fechaInicio } = req.body;
+      const result = await this.generarTurnoAdminUseCase.execute({ usuarioId, horas, fechaInicio });
+      return success(res, result, 'Turno generado correctamente', 201);
+    } catch (err) { next(err); }
+  };
+
+  pendiente = async (req, res, next) => {
+    try {
+      const turno = await this.turnoRepository.findPendienteByUsuario(req.user.id);
+      return success(res, turno, turno ? 'Turno pendiente encontrado' : 'Sin turno pendiente');
+    } catch (err) { next(err); }
+  };
+
+  activarPendiente = async (req, res, next) => {
+    try {
+      const { puntoAforoId, sentido } = req.body;
+      const turno = await this.turnoRepository.findPendienteByUsuario(req.user.id);
+      if (!turno) {
+        return res.status(400).json({ ok: false, message: 'No tienes un turno pendiente asignado' });
+      }
+      await turno.update({ activo: true, fecha_inicio: new Date() });
+      await this.turnoPuntoRepository.create({
+        turno_id: turno.id_turno,
+        punto_aforo_id: puntoAforoId,
+        sentido
+      });
+      const updated = await this.turnoRepository.findById(turno.id_turno);
+      return success(res, updated, 'Turno activado correctamente');
     } catch (err) { next(err); }
   };
 }

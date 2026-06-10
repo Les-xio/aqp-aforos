@@ -9,6 +9,7 @@ module.exports = function usuarioRoutes(usuarioController) {
 
   router.use(authenticate);
   router.get('/', authorize('administrador'), usuarioController.listar);
+  router.get('/auditoria', authorize('administrador'), usuarioController.listarAuditoria);
   router.post('/', authorize('administrador'), registrarRules, validate, usuarioController.registrar);
   router.put('/:id', authorize('administrador'), actualizarRules, validate, usuarioController.actualizar);
   router.delete('/:id', authorize('administrador'), usuarioController.eliminar);

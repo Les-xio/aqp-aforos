@@ -12,4 +12,10 @@ export const usuarioService = {
 
   eliminar: (id) =>
     axiosClient.delete(`/usuarios/${id}`),
+
+  reactivar: (id) =>
+    axiosClient.put(`/usuarios/${id}`, { activo: true }),
+
+  getAuditoria: (params) =>
+    axiosClient.get('/usuarios/auditoria', { params }),
 };

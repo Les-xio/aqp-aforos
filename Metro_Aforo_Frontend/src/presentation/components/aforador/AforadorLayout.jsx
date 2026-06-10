@@ -1,51 +1,73 @@
-import { Box, AppBar, Toolbar, Typography, IconButton, Chip } from '@mui/material';
-import { Logout as LogoutIcon, Wifi as WifiIcon, WifiOff as WifiOffIcon } from '@mui/icons-material';
+import { Box, AppBar, Toolbar, Typography, Button, Chip } from '@mui/material';
+import { Logout as LogoutIcon, Route as RouteIcon, CloudOff as OfflineIcon, CloudDone as OnlineIcon, Sync as SyncIcon } from '@mui/icons-material';
 import { useAuth } from '../../../application/hooks/useAuth';
-import { useState, useEffect } from 'react';
+import { useSync } from '../../../infrastructure/storage/SyncContext';
 
 export function AforadorLayout({ children, hideUserBar }) {
-  const { usuario, logout } = useAuth();
-  const [online, setOnline] = useState(navigator.onLine);
-
-  useEffect(() => {
-    const handleOnline = () => setOnline(true);
-    const handleOffline = () => setOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
+  const { logout } = useAuth();
+  const { online, pendingCount, syncing } = useSync();
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 2 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: hideUserBar ? 'transparent' : 'background.default' }}>
       {!hideUserBar && (
         <AppBar position="static" elevation={1} sx={{ bgcolor: 'primary.dark' }}>
-          <Toolbar sx={{ minHeight: 56 }}>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle2" fontWeight={700}>
-                {usuario?.nombres} {usuario?.apellidos}
-              </Typography>
-              <Typography variant="caption" sx={{ opacity: 0.8, textTransform: 'capitalize' }}>
-                {usuario?.rol}
+          <Toolbar sx={{ minHeight: 56, gap: 1 }}>
+            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <RouteIcon sx={{ fontSize: 26, opacity: 0.9 }} />
+              <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '1px', fontSize: 18 }}>
+                Metro AQP Aforos
               </Typography>
             </Box>
-            <Chip
-              icon={online ? <WifiIcon /> : <WifiOffIcon />}
-              label={online ? 'En línea' : 'Sin conexión'}
+
+            {pendingCount > 0 && (
+              <Chip
+                icon={syncing ? <SyncIcon sx={{ fontSize: 14, animation: 'spin 1s linear infinite' }} /> : <OfflineIcon sx={{ fontSize: 14 }} />}
+                label={syncing ? 'Sincronizando...' : `${pendingCount} pendiente${pendingCount !== 1 ? 's' : ''}`}
+                size="small"
+                sx={{
+                  height: 24, fontSize: 11, fontWeight: 600, color: '#FBBF24',
+                  bgcolor: 'rgba(251,191,36,0.15)', borderRadius: '12px',
+                  '& .MuiChip-icon': { color: '#FBBF24' },
+                  '@keyframes spin': { '100%': { transform: 'rotate(360deg)' } },
+                }}
+              />
+            )}
+
+            {pendingCount === 0 && !online && (
+              <Chip
+                icon={<OfflineIcon sx={{ fontSize: 14 }} />}
+                label="Sin conexión"
+                size="small"
+                sx={{ height: 24, fontSize: 11, fontWeight: 600, color: '#FCA5A5', bgcolor: 'rgba(252,165,165,0.15)', borderRadius: '12px', '& .MuiChip-icon': { color: '#FCA5A5' } }}
+              />
+            )}
+
+            {pendingCount === 0 && online && (
+              <Chip
+                icon={<OnlineIcon sx={{ fontSize: 14 }} />}
+                label="En línea"
+                size="small"
+                sx={{ height: 24, fontSize: 11, fontWeight: 600, color: '#86EFAC', bgcolor: 'rgba(134,239,172,0.15)', borderRadius: '12px', '& .MuiChip-icon': { color: '#86EFAC' } }}
+              />
+            )}
+
+            <Button
+              color="inherit"
+              onClick={logout}
               size="small"
-              color={online ? 'success' : 'error'}
-              variant="outlined"
-              sx={{ color: 'white', borderColor: 'white', mr: 1 }}
-            />
-            <IconButton color="inherit" onClick={logout} size="small">
-              <LogoutIcon />
-            </IconButton>
+              startIcon={<LogoutIcon />}
+              sx={{
+                fontSize: 13, fontWeight: 600, borderRadius: '8px',
+                textTransform: 'none', px: 1.5, py: 0.6,
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
+              }}
+            >
+              Cerrar sesión
+            </Button>
           </Toolbar>
         </AppBar>
       )}
-      <Box sx={{ px: 1.5, pt: 1.5 }}>
+      <Box sx={{ px: hideUserBar ? 0 : 1.5, pt: hideUserBar ? 0 : 1.5 }}>
         {children}
       </Box>
     </Box>

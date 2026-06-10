@@ -1,19 +1,21 @@
 const { success, paginated } = require('../../shared/helpers/response');
 
 class UsuarioController {
-  constructor({ registrarUsuarioUseCase, actualizarUsuarioUseCase, eliminarUsuarioUseCase, obtenerUsuariosUseCase }) {
+  constructor({ registrarUsuarioUseCase, actualizarUsuarioUseCase, eliminarUsuarioUseCase, obtenerUsuariosUseCase, auditoriaRepository }) {
     this.registrarUsuarioUseCase = registrarUsuarioUseCase;
     this.actualizarUsuarioUseCase = actualizarUsuarioUseCase;
     this.eliminarUsuarioUseCase = eliminarUsuarioUseCase;
     this.obtenerUsuariosUseCase = obtenerUsuariosUseCase;
+    this.auditoriaRepository = auditoriaRepository;
   }
 
   listar = async (req, res, next) => {
     try {
-      const { page = 1, limit = 10, activo } = req.query;
+      const { page = 1, limit = 10, activo, rol } = req.query;
       const result = await this.obtenerUsuariosUseCase.execute({
         page: Number(page), limit: Number(limit),
-        activo: activo !== undefined ? activo === 'true' : undefined
+        activo: activo !== undefined ? activo === 'true' : undefined,
+        rol: rol || undefined
       });
       return paginated(res, result.data, result.total, page, limit);
     } catch (err) { next(err); }
@@ -47,6 +49,16 @@ class UsuarioController {
         usuarioAuditorId: req.user.id
       });
       return success(res, result, 'Usuario desactivado');
+    } catch (err) { next(err); }
+  };
+
+  listarAuditoria = async (req, res, next) => {
+    try {
+      const { page = 1, limit = 50, entidad } = req.query;
+      const result = await this.auditoriaRepository.findAll({
+        page: Number(page), limit: Number(limit), entidad
+      });
+      return paginated(res, result.data, result.total, page, limit);
     } catch (err) { next(err); }
   };
 }

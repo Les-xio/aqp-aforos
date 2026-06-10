@@ -7,7 +7,7 @@ class AuditoriaRepository {
     const offset = (page - 1) * limit;
     const { rows, count } = await Auditoria.findAndCountAll({
       where, limit, offset,
-      include: [{ model: Usuario, as: 'usuario', attributes: ['id_usuario', 'nombres', 'apellidos', 'correo'] }],
+      include: [{ model: Usuario, as: 'usuario', attributes: ['id_usuario', 'nombres', 'apellidos', 'correo', 'rol'] }],
       order: [['created_at', 'DESC']]
     });
     return { data: rows, total: count };
