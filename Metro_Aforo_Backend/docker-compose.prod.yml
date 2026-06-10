@@ -39,28 +39,29 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
-      CORS_ORIGIN: ${CORS_ORIGIN:-https://tu-dominio.com}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      DNI_API_BASE_URL: ${DNI_API_BASE_URL}
+      DNI_API_TOKEN: ${DNI_API_TOKEN}
+      DNI_API_TIMEOUT: ${DNI_API_TIMEOUT:-10000}
     volumes:
       - uploads_data:/app/uploads
     networks:
       - aqp-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`api.tu-dominio.com`)"
-      - "traefik.http.routers.backend.entrypoints=websecure"
-      - "traefik.http.services.backend.loadbalancer.server.port=3000"
 
   frontend:
-    image: nginx:alpine
+    build:
+      context: ../Metro_Aforo_Frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
     container_name: aqp-frontend
     restart: always
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./frontend/dist:/usr/share/nginx/html:ro
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
+      - ./nginx-ssl.conf:/etc/nginx/conf.d/default.conf:ro
+      - /opt/ssl:/etc/nginx/ssl:ro
     depends_on:
       - backend
     networks:
