@@ -1,9 +1,10 @@
 const { success } = require('../../shared/helpers/response');
 
 class TurnoController {
-  constructor({ iniciarTurnoUseCase, cerrarTurnoUseCase, generarTurnoAdminUseCase, turnoRepository, franjaHorariaRepository, turnoPuntoRepository }) {
+  constructor({ iniciarTurnoUseCase, cerrarTurnoUseCase, cerrarTurnoAdminUseCase, generarTurnoAdminUseCase, turnoRepository, franjaHorariaRepository, turnoPuntoRepository }) {
     this.iniciarTurnoUseCase = iniciarTurnoUseCase;
     this.cerrarTurnoUseCase = cerrarTurnoUseCase;
+    this.cerrarTurnoAdminUseCase = cerrarTurnoAdminUseCase;
     this.generarTurnoAdminUseCase = generarTurnoAdminUseCase;
     this.turnoRepository = turnoRepository;
     this.franjaHorariaRepository = franjaHorariaRepository;
@@ -27,6 +28,15 @@ class TurnoController {
         usuarioId: req.user.id
       });
       return success(res, result, 'Turno cerrado');
+    } catch (err) { next(err); }
+  };
+
+  cerrarAdmin = async (req, res, next) => {
+    try {
+      const result = await this.cerrarTurnoAdminUseCase.execute({
+        turnoId: Number(req.params.id),
+      });
+      return success(res, result, 'Turno cerrado por administrador');
     } catch (err) { next(err); }
   };
 

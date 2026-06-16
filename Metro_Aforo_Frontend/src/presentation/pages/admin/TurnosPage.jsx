@@ -49,6 +49,7 @@ export function TurnosPage() {
 
   const [turnosList, setTurnosList] = useState([]);
   const [turnosLoading, setTurnosLoading] = useState(true);
+  const [cerrandoId, setCerrandoId] = useState(null);
 
   const fetchAforadores = useCallback(async () => {
     try {
@@ -84,6 +85,20 @@ export function TurnosPage() {
       setTurnosLoading(false);
     }
   }, []);
+
+  const handleCerrarTurno = async (turno) => {
+    if (!window.confirm(`¿Cerrar turno de ${turno.usuario?.nombres} ${turno.usuario?.apellidos}?`)) return;
+    try {
+      setCerrandoId(turno.id_turno);
+      await turnoService.cerrarAdmin(turno.id_turno);
+      setSnackbar({ open: true, message: 'Turno cerrado correctamente', severity: 'success' });
+      fetchTurnos();
+    } catch (err) {
+      setSnackbar({ open: true, message: err.message || 'Error al cerrar turno', severity: 'error' });
+    } finally {
+      setCerrandoId(null);
+    }
+  };
 
   useEffect(() => { fetchAforadores(); fetchTurnos(); }, [fetchAforadores, fetchTurnos]);
 
@@ -244,19 +259,20 @@ export function TurnosPage() {
                   <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap', fontSize: 12, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.3px', fontFamily: font, py: 1.5, bgcolor: '#F8FAFC' }}>Duración</TableCell>
                   <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap', fontSize: 12, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.3px', fontFamily: font, py: 1.5, bgcolor: '#F8FAFC' }}>Punto / Sentido</TableCell>
                   <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap', fontSize: 12, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.3px', fontFamily: font, py: 1.5, bgcolor: '#F8FAFC' }}>Estado</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap', fontSize: 12, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.3px', fontFamily: font, py: 1.5, bgcolor: '#F8FAFC' }}>Acciones</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {turnosList.length === 0 && !turnosLoading && (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 6, color: '#9CA3AF', fontFamily: font, fontSize: 13 }}>
+                    <TableCell colSpan={8} align="center" sx={{ py: 6, color: '#9CA3AF', fontFamily: font, fontSize: 13 }}>
                       No hay turnos registrados aún
                     </TableCell>
                   </TableRow>
                 )}
                 {turnosLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 6, color: '#9CA3AF', fontFamily: font, fontSize: 13 }}>
+                    <TableCell colSpan={8} align="center" sx={{ py: 6, color: '#9CA3AF', fontFamily: font, fontSize: 13 }}>
                       Cargando...
                     </TableCell>
                   </TableRow>
@@ -297,6 +313,20 @@ export function TurnosPage() {
                               color: t.activo ? '#16A34A' : '#6B7280',
                             }}
                           />
+                        </TableCell>
+                        <TableCell sx={{ py: 1.2 }}>
+                          {t.activo && (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              onClick={() => handleCerrarTurno(t)}
+                              disabled={cerrandoId === t.id_turno}
+                              sx={{ borderRadius: '8px', fontSize: 11, fontWeight: 600, textTransform: 'none', minWidth: 0, px: 1.5 }}
+                            >
+                              {cerrandoId === t.id_turno ? <CircularProgress size={14} /> : 'Cerrar'}
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     );

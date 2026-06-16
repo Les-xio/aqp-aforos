@@ -2,16 +2,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Typography, Button, Card, CardContent, Alert, Avatar,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField,
 } from '@mui/material';
 import {
   DirectionsCar as CarIcon, Traffic as TrafficIcon, Logout as LogoutIcon,
   Person as PersonIcon, AccessTime as ClockIcon, CalendarToday as CalendarIcon,
+  Edit as EditIcon, Save as SaveIcon,
 } from '@mui/icons-material';
 import { HelpButton } from '../../components/tours/HelpButton';
 import { tours } from '../../components/tours/tourConfig';
 import { AforadorLayout } from '../../components/aforador/AforadorLayout';
 import { useAuth } from '../../../application/hooks/useAuth';
 import { useTurno } from '../../../application/hooks/useTurno';
+import { usuarioService } from '../../../application/services/usuarioService';
 
 export function MenuPrincipalPage() {
   const navigate = useNavigate();
@@ -19,6 +22,9 @@ export function MenuPrincipalPage() {
   const { turnoActivo, verificarTurnoActivo, cerrarTurno } = useTurno();
   const [hora, setHora] = useState(new Date());
   const [error, setError] = useState('');
+  const [perfilOpen, setPerfilOpen] = useState(false);
+  const [perfilData, setPerfilData] = useState({ dni: usuario?.dni || '', celular: usuario?.celular || '' });
+  const [perfilLoading, setPerfilLoading] = useState(false);
 
   useEffect(() => {
     const check = async () => {
@@ -43,6 +49,21 @@ export function MenuPrincipalPage() {
     window.addEventListener('popstate', handlePop);
     return () => window.removeEventListener('popstate', handlePop);
   }, []);
+
+  const handleActualizarPerfil = async () => {
+    try {
+      setPerfilLoading(true);
+      setError('');
+      await usuarioService.actualizar(usuario.id_usuario, perfilData);
+      setPerfilOpen(false);
+      const stored = JSON.parse(localStorage.getItem('usuario') || '{}');
+      localStorage.setItem('usuario', JSON.stringify({ ...stored, ...perfilData }));
+    } catch (err) {
+      setError(err.message || 'Error al actualizar perfil');
+    } finally {
+      setPerfilLoading(false);
+    }
+  };
 
   const handleCerrarTurno = async () => {
     try {
@@ -120,6 +141,10 @@ export function MenuPrincipalPage() {
                   Rol: {usuario?.rol}
                 </Typography>
               </Box>
+              <Button size="small" onClick={() => setPerfilOpen(true)}
+                sx={{ minWidth: 0, width: 36, height: 36, borderRadius: '50%', color: '#0D5BFF', bgcolor: '#EFF6FF' }}>
+                <EditIcon sx={{ fontSize: 18 }} />
+              </Button>
             </CardContent>
           </Card>
 
@@ -188,6 +213,33 @@ export function MenuPrincipalPage() {
           </Box>
         </Box>
       </Box>
+
+      {/* Diálogo editar perfil */}
+      <Dialog open={perfilOpen} onClose={() => setPerfilOpen(false)} maxWidth="xs" fullWidth
+        slotProps={{ paper: { sx: { borderRadius: '16px' } } }}>
+        <DialogTitle sx={{ fontWeight: 700, fontFamily: font }}>Editar perfil</DialogTitle>
+        <DialogContent>
+          <TextField fullWidth label="DNI" size="small" margin="normal"
+            value={perfilData.dni}
+            onChange={(e) => setPerfilData((p) => ({ ...p, dni: e.target.value }))}
+            slotProps={{ htmlInput: { maxLength: 8 }, input: { sx: { borderRadius: '10px' } } }} />
+          <TextField fullWidth label="Celular" size="small" margin="normal"
+            value={perfilData.celular}
+            onChange={(e) => setPerfilData((p) => ({ ...p, celular: e.target.value }))}
+            slotProps={{ htmlInput: { maxLength: 9 }, input: { sx: { borderRadius: '10px' } } }} />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setPerfilOpen(false)} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>
+            Cancelar
+          </Button>
+          <Button variant="contained" onClick={handleActualizarPerfil} disabled={perfilLoading}
+            startIcon={<SaveIcon />}
+            sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, background: 'linear-gradient(90deg, #0D5BFF, #0052CC)' }}>
+            {perfilLoading ? 'Guardando...' : 'Guardar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <HelpButton steps={tours.aforador.menu} />
     </AforadorLayout>
   );

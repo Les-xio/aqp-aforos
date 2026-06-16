@@ -40,6 +40,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
       CORS_ORIGIN: ${CORS_ORIGIN}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       DNI_API_BASE_URL: ${DNI_API_BASE_URL}
       DNI_API_TOKEN: ${DNI_API_TOKEN}
       DNI_API_TIMEOUT: ${DNI_API_TIMEOUT:-10000}
@@ -54,6 +55,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: /api
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     container_name: aqp-frontend
     restart: always
     ports:

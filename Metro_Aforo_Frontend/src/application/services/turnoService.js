@@ -16,6 +16,9 @@ export const turnoService = {
   cerrar: (id) =>
     axiosClient.put(`/turnos/${id}/cerrar`),
 
+  cerrarAdmin: (id) =>
+    axiosClient.put(`/turnos/${id}/cerrar-admin`),
+
   getFranjas: (id) =>
     axiosClient.get(`/turnos/${id}/franjas`),
 

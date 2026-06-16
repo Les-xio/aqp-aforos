@@ -15,17 +15,20 @@ const SubcategoriaRepository = require('./repositories/SubcategoriaRepository');
 const AuditoriaRepository = require('./repositories/AuditoriaRepository');
 
 const IniciarSesionUseCase = require('../domain/use-cases/auth/iniciar-sesion.usecase');
+const IniciarSesionGoogleUseCase = require('../domain/use-cases/auth/iniciar-sesion-google.usecase');
 const CerrarSesionUseCase = require('../domain/use-cases/auth/cerrar-sesion.usecase');
 const CambiarPasswordUseCase = require('../domain/use-cases/auth/cambiar-password.usecase');
 const SolicitarRecuperacionPasswordUseCase = require('../domain/use-cases/auth/solicitar-recuperacion-password.usecase');
 const RestablecerPasswordUseCase = require('../domain/use-cases/auth/restablecer-password.usecase');
 const ObtenerUsuarioAutenticadoUseCase = require('../domain/use-cases/auth/obtener-usuario-autenticado.usecase');
+const ActualizarMiPerfilUseCase = require('../domain/use-cases/auth/actualizar-mi-perfil.usecase');
 const RegistrarUsuarioUseCase = require('../domain/use-cases/usuario/registrar-usuario.usecase');
 const ActualizarUsuarioUseCase = require('../domain/use-cases/usuario/actualizar-usuario.usecase');
 const EliminarUsuarioUseCase = require('../domain/use-cases/usuario/eliminar-usuario.usecase');
 const ObtenerUsuariosUseCase = require('../domain/use-cases/usuario/obtener-usuarios.usecase');
 const IniciarTurnoUseCase = require('../domain/use-cases/turno/iniciar-turno.usecase');
 const CerrarTurnoUseCase = require('../domain/use-cases/turno/cerrar-turno.usecase');
+const CerrarTurnoAdminUseCase = require('../domain/use-cases/turno/cerrar-turno-admin.usecase');
 const GenerarTurnoAdminUseCase = require('../domain/use-cases/turno/generar-turno-admin.usecase');
 const IniciarFranjaUseCase = require('../domain/use-cases/franja/iniciar-franja.usecase');
 const CerrarFranjaUseCase = require('../domain/use-cases/franja/cerrar-franja.usecase');
@@ -74,6 +77,14 @@ const useCases = {
     restablecerPasswordUseCase: new RestablecerPasswordUseCase({
       usuarioRepository: repositories.usuarioRepository,
       passwordResetRepository: repositories.passwordResetRepository
+    }),
+    iniciarSesionGoogleUseCase: new IniciarSesionGoogleUseCase({
+      usuarioRepository: repositories.usuarioRepository,
+      jwtConfig,
+      googleClientId: process.env.GOOGLE_CLIENT_ID,
+    }),
+    actualizarMiPerfilUseCase: new ActualizarMiPerfilUseCase({
+      usuarioRepository: repositories.usuarioRepository,
     })
   },
   usuario: {
@@ -98,6 +109,7 @@ const useCases = {
       franjaHorariaRepository: repositories.franjaHorariaRepository
     }),
     cerrarTurnoUseCase: new CerrarTurnoUseCase({ turnoRepository: repositories.turnoRepository }),
+    cerrarTurnoAdminUseCase: new CerrarTurnoAdminUseCase({ turnoRepository: repositories.turnoRepository }),
     generarTurnoAdminUseCase: new GenerarTurnoAdminUseCase({
       turnoRepository: repositories.turnoRepository,
       franjaHorariaRepository: repositories.franjaHorariaRepository,

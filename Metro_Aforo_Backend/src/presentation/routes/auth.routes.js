@@ -7,8 +7,10 @@ module.exports = function authRoutes(authController) {
   const router = Router();
 
   router.post('/login', loginRules, validate, authController.login);
+  router.post('/google', authController.googleLogin);
   router.post('/logout', authenticate, authController.logout);
   router.get('/me', authenticate, authController.me);
+  router.put('/mi-perfil', authenticate, authController.actualizarMiPerfil);
   router.put('/cambiar-password', authenticate, cambiarPasswordRules, validate, authController.cambiarPassword);
   router.post('/solicitar-recuperacion', solicitarRecuperacionRules, validate, authController.solicitarRecuperacion);
   router.post('/restablecer-password', restablecerPasswordRules, validate, authController.restablecerPassword);

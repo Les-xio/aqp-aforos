@@ -1,13 +1,15 @@
 const { success } = require('../../shared/helpers/response');
 
 class AuthController {
-  constructor({ iniciarSesionUseCase, cerrarSesionUseCase, cambiarPasswordUseCase, solicitarRecuperacionUseCase, restablecerPasswordUseCase, obtenerUsuarioAutenticadoUseCase }) {
+  constructor({ iniciarSesionUseCase, cerrarSesionUseCase, cambiarPasswordUseCase, solicitarRecuperacionUseCase, restablecerPasswordUseCase, obtenerUsuarioAutenticadoUseCase, iniciarSesionGoogleUseCase, actualizarMiPerfilUseCase }) {
     this.iniciarSesionUseCase = iniciarSesionUseCase;
     this.cerrarSesionUseCase = cerrarSesionUseCase;
     this.cambiarPasswordUseCase = cambiarPasswordUseCase;
     this.solicitarRecuperacionUseCase = solicitarRecuperacionUseCase;
     this.restablecerPasswordUseCase = restablecerPasswordUseCase;
     this.obtenerUsuarioAutenticadoUseCase = obtenerUsuarioAutenticadoUseCase;
+    this.iniciarSesionGoogleUseCase = iniciarSesionGoogleUseCase;
+    this.actualizarMiPerfilUseCase = actualizarMiPerfilUseCase;
   }
 
   login = async (req, res, next) => {
@@ -15,6 +17,15 @@ class AuthController {
       const { correo, password } = req.body;
       const result = await this.iniciarSesionUseCase.execute({ correo, password });
       return success(res, result, 'Inicio de sesión exitoso');
+    } catch (err) { next(err); }
+  };
+
+  googleLogin = async (req, res, next) => {
+    try {
+      const { googleToken } = req.body;
+      if (!googleToken) return res.status(400).json({ ok: false, message: 'Token de Google requerido' });
+      const result = await this.iniciarSesionGoogleUseCase.execute({ googleToken });
+      return success(res, result, 'Inicio de sesión con Google exitoso');
     } catch (err) { next(err); }
   };
 
@@ -29,6 +40,16 @@ class AuthController {
     try {
       const usuario = await this.obtenerUsuarioAutenticadoUseCase.execute(req.user.id);
       return success(res, usuario, 'Usuario autenticado');
+    } catch (err) { next(err); }
+  };
+
+  actualizarMiPerfil = async (req, res, next) => {
+    try {
+      const { dni, celular } = req.body;
+      const result = await this.actualizarMiPerfilUseCase.execute({
+        usuarioId: req.user.id, dni, celular
+      });
+      return success(res, result, 'Perfil actualizado');
     } catch (err) { next(err); }
   };
 

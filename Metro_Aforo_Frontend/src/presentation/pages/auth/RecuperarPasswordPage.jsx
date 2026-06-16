@@ -2,39 +2,52 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Card, CardContent, Typography, TextField, Button, Alert, Avatar,
+  InputAdornment, IconButton,
 } from '@mui/material';
-import { Email as EmailIcon, ArrowBack as BackIcon, Route as RouteIcon, ContentCopy as CopyIcon } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Email as EmailIcon, ArrowBack as BackIcon, Route as RouteIcon, Save as SaveIcon } from '@mui/icons-material';
 import { authService } from '../../../application/services/authService';
 
 export function RecuperarPasswordPage() {
   const navigate = useNavigate();
   const [correo, setCorreo] = useState('');
+  const [nuevaPassword, setNuevaPassword] = useState('');
+  const [confirmarPassword, setConfirmarPassword] = useState('');
+  const [showPwd, setShowPwd] = useState({ nueva: false, confirm: false });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [recoveryLink, setRecoveryLink] = useState('');
+  const [step, setStep] = useState('email');
 
-  const handleSubmit = async (e) => {
+  const solicitarToken = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
-    setRecoveryLink('');
-    if (!correo) {
-      setError('Ingrese su correo electrónico');
-      return;
+    if (!correo) { setError('Ingrese su correo'); return; }
+    try {
+      setLoading(true);
+      await authService.solicitarRecuperacion(correo);
+      setStep('password');
+      setLoading(false);
+    } catch (err) {
+      setError(err.message || 'Correo no encontrado');
+      setLoading(false);
     }
+  };
+
+  const restablecer = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (nuevaPassword.length < 6) { setError('Mínimo 6 caracteres'); return; }
+    if (nuevaPassword !== confirmarPassword) { setError('No coinciden'); return; }
     try {
       setLoading(true);
       const res = await authService.solicitarRecuperacion(correo);
       const token = res.data?.token || res.token;
-      const link = `${window.location.origin}/restablecer-password/${token}`;
-      setRecoveryLink(link);
-      setSuccess('Enlace de recuperación generado. Haz clic en el botón abajo para restablecer tu contraseña.');
+      await authService.restablecerPassword(token, nuevaPassword);
+      setSuccess('Contraseña restablecida correctamente');
+      setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      setError(err.message || 'Error al solicitar recuperación');
-    } finally {
-      setLoading(false);
-    }
+      setError(err.message || 'Error al restablecer');
+    } finally { setLoading(false); }
   };
 
   return (
@@ -59,77 +72,45 @@ export function RecuperarPasswordPage() {
               <RouteIcon sx={{ fontSize: 32, color: '#FFFFFF' }} />
             </Avatar>
             <Typography variant="h5" fontWeight={800} color="#0A2A66" sx={{ letterSpacing: '0.3px' }}>
-              Recuperar contraseña
+              Restablecer contraseña
             </Typography>
             <Typography variant="body2" color="#666666" sx={{ mt: 0.5 }}>
-              Ingrese su correo para recibir un enlace de recuperación
+              {step === 'email' ? 'Ingrese su correo para continuar' : 'Ingrese su nueva contraseña'}
             </Typography>
           </Box>
 
           {error && <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }}>{error}</Alert>}
           {success && <Alert severity="success" sx={{ mb: 2, borderRadius: '12px' }}>{success}</Alert>}
-          {recoveryLink && (
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => navigate(`/restablecer-password/${recoveryLink.split('/').pop()}`)}
-              sx={{
-                mb: 2, py: 1.2, borderRadius: '12px', textTransform: 'none',
-                fontWeight: 600, fontSize: 13, color: '#0D5BFF', borderColor: '#0D5BFF',
-                '&:hover': { borderColor: '#0052CC', bgcolor: 'rgba(13,91,255,.06)' },
-              }}
-            >
-              Ir a restablecer contraseña
-            </Button>
+
+          {step === 'email' ? (
+            <Box component="form" onSubmit={solicitarToken}>
+              <TextField fullWidth label="Correo electrónico" type="email" value={correo}
+                onChange={(e) => setCorreo(e.target.value)} margin="normal" autoFocus
+                slotProps={{ input: { sx: { borderRadius: '12px', bgcolor: '#F5F7FA' }, startAdornment: <EmailIcon sx={{ color: '#999', mr: 1, fontSize: 20 }} /> } }} />
+              <Button type="submit" variant="contained" size="large" fullWidth disabled={loading}
+                sx={{ mt: 3, py: 1.6, borderRadius: '14px', fontWeight: 700, fontSize: 15, background: 'linear-gradient(90deg, #0D5BFF, #0052CC)', boxShadow: '0 8px 20px rgba(13,91,255,.35)', '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 12px 28px rgba(13,91,255,.45)' }, '&:disabled': { background: '#E0E0E0', boxShadow: 'none' }, transition: 'all 0.2s ease' }}>
+                {loading ? 'VERIFICANDO...' : 'CONTINUAR'}
+              </Button>
+            </Box>
+          ) : (
+            <Box component="form" onSubmit={restablecer}>
+              <TextField fullWidth label="Nueva contraseña" type={showPwd.nueva ? 'text' : 'password'}
+                value={nuevaPassword} onChange={(e) => setNuevaPassword(e.target.value)} margin="normal" required
+                slotProps={{ input: { sx: { borderRadius: '12px', bgcolor: '#F5F7FA' }, endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowPwd({ ...showPwd, nueva: !showPwd.nueva })} edge="end">{showPwd.nueva ? <VisibilityOff /> : <Visibility />}</IconButton></InputAdornment> } }} />
+              <TextField fullWidth label="Confirmar contraseña" type={showPwd.confirm ? 'text' : 'password'}
+                value={confirmarPassword} onChange={(e) => setConfirmarPassword(e.target.value)} margin="normal" required
+                slotProps={{ input: { sx: { borderRadius: '12px', bgcolor: '#F5F7FA' }, endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowPwd({ ...showPwd, confirm: !showPwd.confirm })} edge="end">{showPwd.confirm ? <VisibilityOff /> : <Visibility />}</IconButton></InputAdornment> } }} />
+              <Button type="submit" variant="contained" size="large" fullWidth startIcon={<SaveIcon />} disabled={loading || !!success}
+                sx={{ mt: 3, py: 1.6, borderRadius: '14px', fontWeight: 700, fontSize: 15, background: 'linear-gradient(90deg, #0D5BFF, #0052CC)', boxShadow: '0 8px 20px rgba(13,91,255,.35)', '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 12px 28px rgba(13,91,255,.45)' }, '&:disabled': { background: '#E0E0E0', boxShadow: 'none' }, transition: 'all 0.2s ease' }}>
+                {loading ? 'GUARDANDO...' : 'RESTABLECER CONTRASEÑA'}
+              </Button>
+            </Box>
           )}
 
-          <Box component="form" onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
-              label="Correo electrónico"
-              type="email"
-              value={correo}
-              onChange={(e) => setCorreo(e.target.value)}
-              margin="normal"
-              autoFocus
-              slotProps={{
-                input: {
-                  sx: { borderRadius: '12px', bgcolor: '#F5F7FA' },
-                  startAdornment: <EmailIcon sx={{ color: '#999', mr: 1, fontSize: 20 }} />,
-                },
-              }}
-            />
-            <Button
-              type="submit"
-              variant="contained"
-              size="large"
-              fullWidth
-              sx={{
-                mt: 3, py: 1.6, borderRadius: '14px', fontWeight: 700, fontSize: 15,
-                background: 'linear-gradient(90deg, #0D5BFF, #0052CC)',
-                boxShadow: '0 8px 20px rgba(13,91,255,.35)',
-                '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 12px 28px rgba(13,91,255,.45)' },
-                '&:disabled': { background: '#E0E0E0', boxShadow: 'none' },
-                transition: 'all 0.2s ease',
-              }}
-              disabled={loading || !!success}
-            >
-              {loading ? 'ENVIANDO...' : 'ENVIAR ENLACE'}
-            </Button>
-          </Box>
-
           <Box sx={{ textAlign: 'center', mt: 2.5 }}>
-            <Button
-              size="small"
-              onClick={() => navigate('/login')}
-              startIcon={<BackIcon />}
-              sx={{
-                textTransform: 'none', color: '#0D5BFF', fontWeight: 600, fontSize: 13,
-                '&:hover': { bgcolor: 'rgba(13,91,255,.06)' },
-                borderRadius: '8px', px: 1.5,
-              }}
-            >
-              Volver al inicio de sesión
+            <Button size="small" onClick={() => step === 'password' ? setStep('email') : navigate('/login')} startIcon={<BackIcon />}
+              sx={{ textTransform: 'none', color: '#0D5BFF', fontWeight: 600, fontSize: 13, '&:hover': { bgcolor: 'rgba(13,91,255,.06)' }, borderRadius: '8px', px: 1.5 }}>
+              {step === 'password' ? 'Cambiar correo' : 'Volver al inicio de sesión'}
             </Button>
           </Box>
         </CardContent>

@@ -49,6 +49,16 @@ export function AuthProvider({ children }) {
     return user;
   }, []);
 
+  const googleLogin = useCallback(async (googleToken) => {
+    const res = await authService.googleLogin(googleToken);
+    const { token: newToken, usuario: user } = res.data;
+    localStorage.setItem('token', newToken);
+    localStorage.setItem('usuario', JSON.stringify(user));
+    setToken(newToken);
+    setUsuario(user);
+    return user;
+  }, []);
+
   const logout = useCallback(() => {
     authService.logout().catch(() => {});
     localStorage.removeItem('token');
@@ -62,7 +72,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      usuario, token, loading, login, logout, isAdmin, isAforador,
+      usuario, token, loading, login, googleLogin, logout, isAdmin, isAforador,
     }}>
       {children}
     </AuthContext.Provider>

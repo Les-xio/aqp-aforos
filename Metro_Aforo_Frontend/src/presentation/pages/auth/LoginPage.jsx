@@ -5,9 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
   Box, Card, CardContent, Typography, TextField, Button,
-  Alert, InputAdornment, IconButton, Avatar,
+  Alert, InputAdornment, IconButton, Avatar, Divider,
 } from '@mui/material';
 import { Visibility, VisibilityOff, Login as LoginIcon, Route as RouteIcon } from '@mui/icons-material';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../../../application/hooks/useAuth';
 
 const loginSchema = z.object({
@@ -17,7 +18,7 @@ const loginSchema = z.object({
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, usuario } = useAuth();
+  const { login, googleLogin, usuario } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,20 +27,33 @@ export function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
+  const redirectAfterLogin = (user) => {
+    if (user.primer_login) return navigate('/cambiar-password');
+    if (user.rol === 'administrador') return navigate('/admin/dashboard');
+    navigate('/aforador/iniciar-turno');
+  };
+
   const onSubmit = async (data) => {
     try {
       setError('');
       setLoading(true);
       const user = await login(data.correo, data.password);
-      if (user.primer_login) {
-        navigate('/cambiar-password');
-      } else if (user.rol === 'administrador') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/aforador/iniciar-turno');
-      }
+      redirectAfterLogin(user);
     } catch (err) {
       setError(err.message || 'Credenciales inválidas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setError('');
+      setLoading(true);
+      const user = await googleLogin(credentialResponse.credential);
+      redirectAfterLogin(user);
+    } catch (err) {
+      setError(err.message || 'Error al iniciar sesión con Google');
     } finally {
       setLoading(false);
     }
@@ -149,6 +163,20 @@ export function LoginPage() {
               {loading ? 'Ingresando...' : 'INICIAR SESIÓN'}
             </Button>
           </form>
+
+          <Divider sx={{ my: 2.5, color: '#D1D5DB', fontSize: 12, fontWeight: 500 }}>O CONTINÚA CON</Divider>
+
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Error al autenticar con Google')}
+              theme="outline"
+              size="large"
+              shape="pill"
+              text="signin_with"
+              width="320"
+            />
+          </Box>
 
           <Typography variant="body2" sx={{ textAlign: 'center', mt: 2.5 }}>
             <Button

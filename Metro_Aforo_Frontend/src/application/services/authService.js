@@ -4,6 +4,9 @@ export const authService = {
   login: (correo, password) =>
     axiosClient.post('/auth/login', { correo, password }),
 
+  googleLogin: (googleToken) =>
+    axiosClient.post('/auth/google', { googleToken }),
+
   logout: () =>
     axiosClient.post('/auth/logout'),
 
